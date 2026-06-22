@@ -1,0 +1,207 @@
+version: '3.9'
+
+# ═══════════════════════════════════════════════════════
+#  ASSETFLOW ECOSYSTEM — Full Stack Docker Compose
+# ═══════════════════════════════════════════════════════
+
+networks:
+  assetflow-net:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+  redis-data:
+  ollama-data:
+
+services:
+
+  # ── Infrastructure ─────────────────────────────────
+  mongodb:
+    image: mongo:7.0
+    container_name: assetflow-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: assetflow
+      MONGO_INITDB_ROOT_PASSWORD: assetflow123
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - assetflow-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: assetflow-redis
+    restart: unless-stopped
+    command: redis-server --requirepass redis123 --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - assetflow-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: assetflow-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - assetflow-net
+    # GPU support (uncomment if you have NVIDIA GPU)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Bank Simulator ─────────────────────────────────
+  bank-backend:
+    build:
+      context: ./bank-simulator/backend
+    container_name: bank-simulator-backend
+    restart: unless-stopped
+    environment:
+      - BANK_MONGO_URI=mongodb://assetflow:assetflow123@mongodb:27017/bank_simulator?authSource=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis123
+      - JWT_SECRET_KEY=super-secret-production-key-change-me-32chars
+      - ALLOWED_ORIGINS=http://localhost:3001,http://bank-frontend:80
+    ports:
+      - "8001:8001"
+    networks:
+      - assetflow-net
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  bank-frontend:
+    build:
+      context: ./bank-simulator/frontend
+    container_name: bank-simulator-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_BANK_API_URL=http://localhost:8001
+    ports:
+      - "3001:80"
+    networks:
+      - assetflow-net
+    depends_on:
+      - bank-backend
+
+  # ── AssetFlow System ───────────────────────────────
+  assetflow-backend:
+    build:
+      context: ./assetflow-system/backend
+    container_name: assetflow-backend
+    restart: unless-stopped
+    environment:
+      - ASSETFLOW_MONGO_URI=mongodb://assetflow:assetflow123@mongodb:27017/assetflow?authSource=admin
+      - ML_SERVICE_URL=http://ml-service:8005
+      - AI_SERVICE_URL=http://ai-service:8006
+      - TAX_SERVICE_URL=http://tax-service:8007
+      - ALLOWED_ORIGINS=http://localhost:3002,http://assetflow-frontend:80
+    ports:
+      - "8002:8002"
+    networks:
+      - assetflow-net
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  assetflow-frontend:
+    build:
+      context: ./assetflow-system/frontend
+    container_name: assetflow-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_ASSETFLOW_API_URL=http://localhost:8002
+      - VITE_ML_SERVICE_URL=http://localhost:8005
+      - VITE_AI_SERVICE_URL=http://localhost:8006
+      - VITE_TAX_SERVICE_URL=http://localhost:8007
+    ports:
+      - "3002:80"
+    networks:
+      - assetflow-net
+    depends_on:
+      - assetflow-backend
+
+  consumer-service:
+    build:
+      context: ./assetflow-system/consumer-service
+    container_name: assetflow-consumer
+    restart: unless-stopped
+    environment:
+      - ASSETFLOW_MONGO_URI=mongodb://assetflow:assetflow123@mongodb:27017/assetflow?authSource=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis123
+    ports:
+      - "8003:8003"
+    networks:
+      - assetflow-net
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ml-service:
+    build:
+      context: ./assetflow-system/ml-service
+    container_name: assetflow-ml
+    restart: unless-stopped
+    ports:
+      - "8005:8005"
+    networks:
+      - assetflow-net
+
+  ai-service:
+    build:
+      context: ./assetflow-system/ai-service
+    container_name: assetflow-ai
+    restart: unless-stopped
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=phi3
+      - OLLAMA_TIMEOUT=120
+    ports:
+      - "8006:8006"
+    networks:
+      - assetflow-net
+    depends_on:
+      - ollama
+
+  tax-service:
+    build:
+      context: ./assetflow-system/tax-service
+    container_name: assetflow-tax
+    restart: unless-stopped
+    ports:
+      - "8007:8007"
+    networks:
+      - assetflow-net

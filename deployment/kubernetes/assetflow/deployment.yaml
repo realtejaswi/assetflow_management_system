@@ -1,0 +1,240 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assetflow-backend
+  namespace: assetflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: assetflow-backend
+  template:
+    metadata:
+      labels:
+        app: assetflow-backend
+    spec:
+      containers:
+        - name: assetflow-backend
+          image: assetflow/assetflow-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - configMapRef: { name: assetflow-config }
+            - secretRef: { name: assetflow-secrets }
+          resources:
+            requests: { memory: "256Mi", cpu: "200m" }
+            limits: { memory: "512Mi", cpu: "500m" }
+          livenessProbe:
+            httpGet: { path: /health, port: 8002 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assetflow-backend
+  namespace: assetflow
+spec:
+  selector:
+    app: assetflow-backend
+  ports:
+    - port: 8002
+      targetPort: 8002
+      nodePort: 30002
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assetflow-frontend
+  namespace: assetflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: assetflow-frontend
+  template:
+    metadata:
+      labels:
+        app: assetflow-frontend
+    spec:
+      containers:
+        - name: assetflow-frontend
+          image: assetflow/assetflow-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "100m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assetflow-frontend
+  namespace: assetflow
+spec:
+  selector:
+    app: assetflow-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30020
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-service
+  namespace: assetflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer-service
+  template:
+    metadata:
+      labels:
+        app: consumer-service
+    spec:
+      containers:
+        - name: consumer-service
+          image: assetflow/consumer-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8003
+          envFrom:
+            - configMapRef: { name: assetflow-config }
+            - secretRef: { name: assetflow-secrets }
+          resources:
+            requests: { memory: "128Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "250m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consumer-service
+  namespace: assetflow
+spec:
+  selector:
+    app: consumer-service
+  ports:
+    - port: 8003
+      targetPort: 8003
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-service
+  namespace: assetflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ml-service
+  template:
+    metadata:
+      labels:
+        app: ml-service
+    spec:
+      containers:
+        - name: ml-service
+          image: assetflow/ml-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8005
+          resources:
+            requests: { memory: "512Mi", cpu: "500m" }
+            limits: { memory: "2Gi", cpu: "2000m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-service
+  namespace: assetflow
+spec:
+  selector:
+    app: ml-service
+  ports:
+    - port: 8005
+      targetPort: 8005
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-service
+  namespace: assetflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      containers:
+        - name: ai-service
+          image: assetflow/ai-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8006
+          envFrom:
+            - configMapRef: { name: assetflow-config }
+          resources:
+            requests: { memory: "128Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "200m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service
+  namespace: assetflow
+spec:
+  selector:
+    app: ai-service
+  ports:
+    - port: 8006
+      targetPort: 8006
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tax-service
+  namespace: assetflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tax-service
+  template:
+    metadata:
+      labels:
+        app: tax-service
+    spec:
+      containers:
+        - name: tax-service
+          image: assetflow/tax-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8007
+          resources:
+            requests: { memory: "128Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "200m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tax-service
+  namespace: assetflow
+spec:
+  selector:
+    app: tax-service
+  ports:
+    - port: 8007
+      targetPort: 8007
+      nodePort: 30007
+  type: NodePort

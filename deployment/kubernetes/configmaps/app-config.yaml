@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: assetflow-config
+  namespace: assetflow
+data:
+  MONGO_HOST: "mongodb"
+  MONGO_PORT: "27017"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  BANK_DB_NAME: "bank_simulator"
+  ASSETFLOW_DB_NAME: "assetflow"
+  BANK_BACKEND_PORT: "8001"
+  ASSETFLOW_BACKEND_PORT: "8002"
+  CONSUMER_SERVICE_PORT: "8003"
+  ML_SERVICE_PORT: "8005"
+  AI_SERVICE_PORT: "8006"
+  TAX_SERVICE_PORT: "8007"
+  OLLAMA_HOST: "ollama"
+  OLLAMA_PORT: "11434"
+  OLLAMA_MODEL: "phi3"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"

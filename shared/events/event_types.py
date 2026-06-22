@@ -1,0 +1,67 @@
+# ── Shared Event Types ────────────────────────────────────────
+
+# Transaction Events
+TRANSACTION_CREATED = "TRANSACTION_CREATED"
+SALARY_CREDITED = "SALARY_CREDITED"
+UPI_PAYMENT = "UPI_PAYMENT"
+ATM_WITHDRAWAL = "ATM_WITHDRAWAL"
+BILL_PAYMENT = "BILL_PAYMENT"
+TRANSFER_CREATED = "TRANSFER_CREATED"
+
+# Loan Events
+LOAN_CREATED = "LOAN_CREATED"
+EMI_DEDUCTED = "EMI_DEDUCTED"
+LOAN_CLOSED = "LOAN_CLOSED"
+LOAN_OVERDUE = "LOAN_OVERDUE"
+
+# Investment Events
+FD_CREATED = "FD_CREATED"
+FD_MATURED = "FD_MATURED"
+FD_INTEREST_CREDITED = "FD_INTEREST_CREDITED"
+STOCK_PURCHASED = "STOCK_PURCHASED"
+STOCK_SOLD = "STOCK_SOLD"
+STOCK_PRICE_UPDATED = "STOCK_PRICE_UPDATED"
+MF_PURCHASED = "MF_PURCHASED"
+MF_SOLD = "MF_SOLD"
+NAV_UPDATED = "NAV_UPDATED"
+GOLD_PURCHASED = "GOLD_PURCHASED"
+GOLD_SOLD = "GOLD_SOLD"
+GOLD_RATE_UPDATED = "GOLD_RATE_UPDATED"
+
+# Account Events
+ACCOUNT_CREATED = "ACCOUNT_CREATED"
+ACCOUNT_UPDATED = "ACCOUNT_UPDATED"
+
+# Alert Events
+ANOMALY_DETECTED = "ANOMALY_DETECTED"
+BUDGET_BREACHED = "BUDGET_BREACHED"
+LOW_BALANCE_ALERT = "LOW_BALANCE_ALERT"
+EMI_DUE_REMINDER = "EMI_DUE_REMINDER"
+
+# Score Events
+HEALTH_SCORE_UPDATED = "HEALTH_SCORE_UPDATED"
+
+# Transaction Categories
+CATEGORIES = [
+    "Food",
+    "Travel",
+    "Shopping",
+    "Bills",
+    "EMI",
+    "Investment",
+    "Healthcare",
+    "Entertainment",
+    "Salary",
+    "Transfer",
+    "ATM",
+    "Other",
+]
+
+# Redis Channels
+CHANNELS = {
+    "all": "bank_events",
+    "transactions": "bank_transactions",
+    "loans": "bank_loans",
+    "investments": "bank_investments",
+    "alerts": "bank_alerts",
+}
