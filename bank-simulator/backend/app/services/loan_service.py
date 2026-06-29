@@ -11,6 +11,21 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
+def _sanitize(doc: dict) -> dict:
+    """Recursively convert ObjectId values to str so FastAPI can serialize them."""
+    out = {}
+    for k, v in doc.items():
+        if isinstance(v, ObjectId):
+            out[k] = str(v)
+        elif isinstance(v, dict):
+            out[k] = _sanitize(v)
+        elif isinstance(v, list):
+            out[k] = [_sanitize(i) if isinstance(i, dict) else (str(i) if isinstance(i, ObjectId) else i) for i in v]
+        else:
+            out[k] = v
+    return out
+
+
 def calculate_emi(principal: float, annual_rate: float, tenure_months: int) -> float:
     """Calculate EMI using reducing balance method."""
     if annual_rate == 0:
@@ -98,7 +113,8 @@ async def create_loan(loan_data: Dict, user_id: str) -> Dict:
     }
     await publish_event(settings.bank_loan_channel, event)
     loan_doc["id"] = loan_id
-    return loan_doc
+    loan_doc.pop("_id", None)   # remove raw ObjectId inserted by Motor
+    return _sanitize(loan_doc)
 
 
 async def process_emi_payment(loan_id: str, user_id: str) -> Dict:
@@ -153,4 +169,4 @@ async def process_emi_payment(loan_id: str, user_id: str) -> Dict:
     }
     await publish_event(settings.bank_loan_channel, event)
     emi["id"] = str(emi.pop("_id"))
-    return emi
+    return _sanitize(emi)

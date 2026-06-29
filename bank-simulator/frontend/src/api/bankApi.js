@@ -9,7 +9,7 @@ export const bankApi = axios.create({
 
 // Attach JWT token
 bankApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('bank_access_token')
+  const token = sessionStorage.getItem('bank_access_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -19,15 +19,15 @@ bankApi.interceptors.response.use(
   (res) => res,
   async (error) => {
     if (error.response?.status === 401) {
-      const refresh = localStorage.getItem('bank_refresh_token')
+      const refresh = sessionStorage.getItem('bank_refresh_token')
       if (refresh) {
         try {
           const { data } = await axios.post(`${BANK_API_URL}/auth/refresh`, { refresh_token: refresh })
-          localStorage.setItem('bank_access_token', data.access_token)
+          sessionStorage.setItem('bank_access_token', data.access_token)
           error.config.headers.Authorization = `Bearer ${data.access_token}`
           return bankApi(error.config)
         } catch {
-          localStorage.clear()
+          sessionStorage.clear()
           window.location.href = '/login'
         }
       }

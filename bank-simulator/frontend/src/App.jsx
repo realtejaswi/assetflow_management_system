@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30000, retry: 1 } }
 })
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0A0F1E' }}><CircularProgress /></Box>
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
@@ -31,14 +31,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 
 function TransactionsPage() {
-  const { data: txns } = useQuery({ queryKey: ['all-txns'], queryFn: () => bankApi.get('/transactions/?limit=50').then((r: any) => r.data) })
+  const { data: txns } = useQuery({ queryKey: ['all-txns'], queryFn: () => bankApi.get('/transactions/?limit=50').then((r) => r.data) })
   
   return (
     <Box>
       <Typography variant="h4" fontWeight={800} mb={3}>Transaction History</Typography>
       <Card>
         <CardContent sx={{ p: 0 }}>
-          {txns?.map((t: any) => (
+          {txns?.map((t) => (
             <Box key={t.id} sx={{ display: 'flex', justifyContent: 'space-between', px: 3, py: 2, borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
               <Box>
                 <Typography fontWeight={600}>{t.description || t.merchant || 'Transaction'}</Typography>

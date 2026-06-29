@@ -1,7 +1,7 @@
 import React from 'react'
 import {
   Box, Grid, Card, CardContent, Typography, Chip, Avatar,
-  IconButton, LinearProgress, Skeleton
+  IconButton, LinearProgress, Skeleton, CircularProgress
 } from '@mui/material'
 import {
   AccountBalance, TrendingUp, TrendingDown, SwapHoriz,
@@ -14,17 +14,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar
 } from 'recharts'
 
-// ── Metric Card ───────────────────────────────────────────────
-interface MetricCardProps {
-  title: string
-  value: string
-  subtitle?: string
-  icon: React.ReactNode
-  color: string
-  trend?: number
-}
-
-function MetricCard({ title, value, subtitle, icon, color, trend }: MetricCardProps) {
+function MetricCard({ title, value, subtitle, icon, color, trend }) {
   return (
     <Card sx={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
       <Box sx={{
@@ -63,7 +53,7 @@ function MetricCard({ title, value, subtitle, icon, color, trend }: MetricCardPr
             background: `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: `1px solid ${color}30`
           }}>
-            {React.cloneElement(icon as React.ReactElement, { sx: { color, fontSize: 26 } })}
+            {React.cloneElement(icon, { sx: { color, fontSize: 26 } })}
           </Box>
         </Box>
       </CardContent>
@@ -72,9 +62,9 @@ function MetricCard({ title, value, subtitle, icon, color, trend }: MetricCardPr
 }
 
 // ── Transaction Row ───────────────────────────────────────────
-function TransactionRow({ txn }: { txn: any }) {
+function TransactionRow({ txn }) {
   const isPositive = txn.amount > 0
-  const CATEGORY_COLORS: Record<string, string> = {
+  const CATEGORY_COLORS = {
     Food: '#F59E0B', Travel: '#3B82F6', Shopping: '#8B5CF6',
     Bills: '#EF4444', EMI: '#F97316', Investment: '#10B981',
     Healthcare: '#06B6D4', Entertainment: '#EC4899', Salary: '#22C55E',
@@ -133,20 +123,15 @@ export default function DashboardPage() {
     queryFn: () => bankApi.get('/transactions/summary').then(r => r.data),
   })
 
-  const totalBalance = accounts?.reduce((sum: number, a: any) => sum + a.balance, 0) || 0
+  const totalBalance = accounts?.reduce((sum, a) => sum + a.balance, 0) || 0
   const totalInvestments = investmentSummary?.total_investment_value || 0
 
-  // Mock monthly chart data
-  const monthlyData = [
-    { month: 'Jan', income: 85000, expense: 52000 },
-    { month: 'Feb', income: 85000, expense: 48000 },
-    { month: 'Mar', income: 90000, expense: 55000 },
-    { month: 'Apr', income: 85000, expense: 43000 },
-    { month: 'May', income: 95000, expense: 58000 },
-    { month: 'Jun', income: 85000, expense: 45000 },
-  ]
+  const { data: monthlyData, isLoading: monthlyLoading } = useQuery({
+    queryKey: ['transactions-monthly-trend'],
+    queryFn: () => bankApi.get('/transactions/monthly-trend').then(r => r.data),
+  })
 
-  const formatINR = (n: number) => `₹${n.toLocaleString('en-IN')}`
+  const formatINR = (n) => `₹${n.toLocaleString('en-IN')}`
 
   return (
     <Box>
@@ -171,7 +156,7 @@ export default function DashboardPage() {
 
       {/* Metric Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid item xs={12} sm={6} lg={6}>
           <MetricCard
             title="Total Balance"
             value={accsLoading ? '...' : formatINR(totalBalance)}
@@ -179,7 +164,7 @@ export default function DashboardPage() {
             icon={<AccountBalance />} color="#00C6FF" trend={5.2}
           />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
+        <Grid item xs={12} sm={6} lg={6}>
           <MetricCard
             title="Investments"
             value={formatINR(totalInvestments)}
@@ -187,22 +172,7 @@ export default function DashboardPage() {
             icon={<TrendingUp />} color="#10B981" trend={8.7}
           />
         </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <MetricCard
-            title="Monthly Income"
-            value={formatINR(85000)}
-            subtitle="Salary + Other"
-            icon={<ArrowUpward />} color="#22C55E"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <MetricCard
-            title="Monthly Spend"
-            value={formatINR(45000)}
-            subtitle="All categories"
-            icon={<CreditCard />} color="#F59E0B" trend={-3.1}
-          />
-        </Grid>
+
       </Grid>
 
       {/* Charts + Transactions */}
@@ -213,7 +183,12 @@ export default function DashboardPage() {
             <CardContent sx={{ p: 3, height: '100%' }}>
               <Typography variant="h6" fontWeight={700} mb={3}>Income vs Expenses</Typography>
               <ResponsiveContainer width="100%" height="85%">
-                <AreaChart data={monthlyData}>
+                {monthlyLoading ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    <CircularProgress size={24} sx={{ color: '#00C6FF' }} />
+                  </Box>
+                ) : (
+                  <AreaChart data={monthlyData || []}>
                   <defs>
                     <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
@@ -229,11 +204,12 @@ export default function DashboardPage() {
                   <YAxis stroke="#64748B" tick={{ fontSize: 12 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
                   <Tooltip
                     contentStyle={{ background: '#1E293B', border: '1px solid rgba(148,163,184,0.2)', borderRadius: 12 }}
-                    formatter={(v: number) => [`₹${v.toLocaleString('en-IN')}`, '']}
+                    formatter={(v) => [`₹${v.toLocaleString('en-IN')}`, '']}
                   />
                   <Area type="monotone" dataKey="income" stroke="#10B981" strokeWidth={2} fill="url(#incomeGrad)" name="Income" />
                   <Area type="monotone" dataKey="expense" stroke="#EF4444" strokeWidth={2} fill="url(#expenseGrad)" name="Expense" />
                 </AreaChart>
+                )}
               </ResponsiveContainer>
             </CardContent>
           </Card>
@@ -249,7 +225,7 @@ export default function DashboardPage() {
               </Box>
               <Box sx={{ flex: 1, overflow: 'auto' }}>
                 {transactions?.length > 0 ? (
-                  transactions.map((t: any) => <TransactionRow key={t.id} txn={t} />)
+                  transactions.map((t) => <TransactionRow key={t.id} txn={t} />)
                 ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                     <Typography color="text.secondary">No transactions yet</Typography>
@@ -266,7 +242,7 @@ export default function DashboardPage() {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" fontWeight={700} mb={2}>Your Accounts</Typography>
               <Grid container spacing={2}>
-                {accounts?.map((account: any) => (
+                {accounts?.map((account) => (
                   <Grid item xs={12} sm={6} md={4} key={account.id}>
                     <Box sx={{
                       p: 2.5, borderRadius: 3,

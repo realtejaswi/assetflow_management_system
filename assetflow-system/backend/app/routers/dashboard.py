@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 from bson import ObjectId
 import httpx
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.config import settings
@@ -143,3 +144,42 @@ async def get_monthly_trend(user_id: str = Query(...), months: int = 6):
         })
 
     return results
+
+
+class SyncData(BaseModel):
+    user_id: str
+    bank_balance: float
+    stock_value: float
+    mf_value: float
+    gold_value: float
+    fd_value: float
+
+@router.post("/sync")
+async def sync_dashboard_data(data: SyncData):
+    """Forcefully synchronize AssetFlow data from absolute bank state."""
+    db = get_db()
+    
+    # Update aggregated_accounts
+    await db.aggregated_accounts.update_one(
+        {"user_id": data.user_id},
+        {"$set": {
+            "last_balance": data.bank_balance,
+            "last_updated": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    # Update aggregated_assets
+    await db.aggregated_assets.update_one(
+        {"user_id": data.user_id},
+        {"$set": {
+            "total_stock_value": data.stock_value,
+            "total_mf_value": data.mf_value,
+            "total_gold_value": data.gold_value,
+            "total_fd_value": data.fd_value,
+            "last_updated": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Data synchronized successfully"}

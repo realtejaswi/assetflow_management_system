@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Optional
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.database import get_db
 from app.models.transaction import (
@@ -109,3 +109,42 @@ async def transaction_summary(current_user=Depends(get_current_user)):
     ]
     result = await db.transactions.aggregate(pipeline).to_list(length=100)
     return result
+
+
+@router.get("/monthly-trend")
+async def monthly_trend(months: int = Query(6, ge=1, le=12), current_user=Depends(get_current_user)):
+    db = get_db()
+    user_id = str(current_user["_id"])
+    now = datetime.utcnow()
+    results = []
+
+    for i in range(months - 1, -1, -1):
+        target = now - timedelta(days=30 * i)
+        month_start = target.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if i == 0:
+            month_end = now
+        else:
+            next_month = month_start + timedelta(days=32)
+            month_end = next_month.replace(day=1)
+
+        pipe_income = [
+            {"$match": {"user_id": user_id, "timestamp": {"$gte": month_start, "$lt": month_end}, "amount": {"$gt": 0}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]
+        pipe_expense = [
+            {"$match": {"user_id": user_id, "timestamp": {"$gte": month_start, "$lt": month_end}, "amount": {"$lt": 0}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]
+
+        inc = await db.transactions.aggregate(pipe_income).to_list(1)
+        exp = await db.transactions.aggregate(pipe_expense).to_list(1)
+        income = inc[0]["total"] if inc else 0
+        expense = abs(exp[0]["total"]) if exp else 0
+
+        results.append({
+            "month": target.strftime("%b"),
+            "income": round(income, 2),
+            "expense": round(expense, 2),
+        })
+
+    return results

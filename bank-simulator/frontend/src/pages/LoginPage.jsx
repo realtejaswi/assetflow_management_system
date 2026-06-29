@@ -21,27 +21,37 @@ export default function LoginPage() {
     full_name: '', email: '', phone: '', password: '', role: 'user'
   })
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true); setError('')
     try {
       await login(loginForm.email, loginForm.password)
       toast.success('Welcome back!')
       navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed')
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail[0].msg);
+      } else {
+        setError(detail || 'Login failed');
+      }
     } finally { setLoading(false) }
   }
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
     setLoading(true); setError('')
     try {
       await register(registerForm)
-      toast.success('Account created successfully!')
-      navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed')
+      toast.success('Account created successfully! Please login.')
+      setTab(0)
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail[0].msg);
+      } else {
+        setError(detail || 'Registration failed');
+      }
     } finally { setLoading(false) }
   }
 
@@ -66,7 +76,7 @@ export default function LoginPage() {
             background: 'linear-gradient(135deg, #00C6FF, #7C3AED)',
             backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
           }}>
-            Bank Simulator
+            The Bank
           </Typography>
           <Typography color="text.secondary" variant="body2" mt={0.5}>
             Simulate a complete financial ecosystem
@@ -109,12 +119,6 @@ export default function LoginPage() {
                   sx={{ mt: 1, py: 1.5 }}>
                   {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                 </Button>
-                {/* Demo credentials */}
-                <Box sx={{ textAlign: 'center', mt: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Demo: admin@bank.com / admin123
-                  </Typography>
-                </Box>
               </Box>
             ) : (
               <Box component="form" onSubmit={handleRegister} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>

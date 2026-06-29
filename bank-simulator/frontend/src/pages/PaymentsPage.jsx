@@ -37,29 +37,29 @@ export default function PaymentsPage() {
   })
 
   const upiMutation = useMutation({
-    mutationFn: (data: any) => bankApi.post('/transactions/upi', data),
+    mutationFn: (data) => bankApi.post('/transactions/upi', data),
     onSuccess: () => {
       toast.success('UPI payment successful! 🎉')
       qc.invalidateQueries({ queryKey: ['accounts'] })
       qc.invalidateQueries({ queryKey: ['transactions-recent'] })
       setUpiForm({ account_id: '', upi_id: '', merchant: '', amount: '', category: 'Other', description: '' })
     },
-    onError: (e: any) => toast.error(e.response?.data?.detail || 'Payment failed'),
+    onError: (e) => toast.error(e.response?.data?.detail || 'Payment failed'),
   })
 
   const depositMutation = useMutation({
-    mutationFn: (data: any) => bankApi.post('/transactions/deposit', data),
+    mutationFn: (data) => bankApi.post('/transactions/deposit', data),
     onSuccess: () => { toast.success('Deposit successful!'); qc.invalidateQueries({ queryKey: ['accounts'] }) },
-    onError: (e: any) => toast.error(e.response?.data?.detail || 'Deposit failed'),
+    onError: (e) => toast.error(e.response?.data?.detail || 'Deposit failed'),
   })
 
   const withdrawMutation = useMutation({
-    mutationFn: (data: any) => bankApi.post('/transactions/withdraw', data),
+    mutationFn: (data) => bankApi.post('/transactions/withdraw', data),
     onSuccess: () => { toast.success('Withdrawal successful!'); qc.invalidateQueries({ queryKey: ['accounts'] }) },
-    onError: (e: any) => toast.error(e.response?.data?.detail || 'Withdrawal failed'),
+    onError: (e) => toast.error(e.response?.data?.detail || 'Withdrawal failed'),
   })
 
-  const quickPay = (merchant: (typeof MERCHANTS)[0]) => {
+  const quickPay = (merchant) => {
     if (!upiForm.account_id) return toast.error('Select an account first')
     upiMutation.mutate({
       account_id: upiForm.account_id,
@@ -90,7 +90,7 @@ export default function PaymentsPage() {
             <InputLabel>Account</InputLabel>
             <Select value={upiForm.account_id} label="Account"
               onChange={e => setUpiForm({ ...upiForm, account_id: e.target.value })}>
-              {accounts?.map((a: any) => (
+              {accounts?.map((a) => (
                 <MenuItem key={a.id} value={a.id}>{a.nickname || a.account_number} — ₹{a.balance.toLocaleString('en-IN')}</MenuItem>
               ))}
             </Select>
@@ -125,7 +125,7 @@ export default function PaymentsPage() {
                   <InputLabel>From Account</InputLabel>
                   <Select value={upiForm.account_id} label="From Account"
                     onChange={e => setUpiForm({ ...upiForm, account_id: e.target.value })}>
-                    {accounts?.map((a: any) => (
+                    {accounts?.map((a) => (
                       <MenuItem key={a.id} value={a.id}>{a.account_number} — ₹{a.balance.toLocaleString('en-IN')}</MenuItem>
                     ))}
                   </Select>
@@ -169,7 +169,7 @@ export default function PaymentsPage() {
                   <InputLabel>Account</InputLabel>
                   <Select value={depositForm.account_id} label="Account"
                     onChange={e => setDepositForm({ ...depositForm, account_id: e.target.value })}>
-                    {accounts?.map((a: any) => (
+                    {accounts?.map((a) => (
                       <MenuItem key={a.id} value={a.id}>{a.account_number}</MenuItem>
                     ))}
                   </Select>
@@ -199,7 +199,7 @@ export default function PaymentsPage() {
                   <InputLabel>Account</InputLabel>
                   <Select value={withdrawForm.account_id} label="Account"
                     onChange={e => setWithdrawForm({ ...withdrawForm, account_id: e.target.value })}>
-                    {accounts?.map((a: any) => (
+                    {accounts?.map((a) => (
                       <MenuItem key={a.id} value={a.id}>{a.account_number} — ₹{a.balance.toLocaleString('en-IN')}</MenuItem>
                     ))}
                   </Select>

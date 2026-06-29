@@ -10,9 +10,23 @@ from app.routers.auth import get_current_user
 router = APIRouter(prefix="/loans", tags=["Loans"])
 
 
+def _sanitize(doc: dict) -> dict:
+    out = {}
+    for k, v in doc.items():
+        if isinstance(v, ObjectId):
+            out[k] = str(v)
+        elif isinstance(v, dict):
+            out[k] = _sanitize(v)
+        elif isinstance(v, list):
+            out[k] = [_sanitize(i) if isinstance(i, dict) else (str(i) if isinstance(i, ObjectId) else i) for i in v]
+        else:
+            out[k] = v
+    return out
+
+
 def _doc_to_loan(doc: dict) -> dict:
     doc["id"] = str(doc.pop("_id"))
-    return doc
+    return _sanitize(doc)
 
 
 @router.post("/", status_code=201)
@@ -20,7 +34,6 @@ async def apply_loan(data: LoanCreate, current_user=Depends(get_current_user)):
     user_id = str(current_user["_id"])
     try:
         loan = await create_loan(data.model_dump(), user_id)
-        loan["id"] = str(loan.get("id", ""))
         return loan
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

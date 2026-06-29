@@ -17,14 +17,27 @@ const LOAN_TYPES = [
   { type: 'education', label: 'Education Loan', icon: <School />, rate: '9%', color: '#06B6D4', maxAmt: '₹50L' },
 ]
 
-const DEFAULT_RATES: Record<string, number> = {
+const DEFAULT_RATES = {
   personal: 14, home: 8.5, vehicle: 10, education: 9
 }
 
-function emiCalc(principal: number, rate: number, months: number): number {
+function emiCalc(principal, rate, months) {
   if (rate === 0) return principal / months
   const r = rate / (12 * 100)
   return principal * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1)
+}
+
+const RADIAN = Math.PI / 180
+function renderInsideLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  return (
+    <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central"
+      fontWeight="800" fontSize={15} style={{ pointerEvents: 'none' }}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  )
 }
 
 export default function LoansPage() {
@@ -37,22 +50,22 @@ export default function LoansPage() {
   const { data: loans, isLoading } = useQuery({ queryKey: ['loans'], queryFn: () => bankApi.get('/loans/').then(r => r.data) })
 
   const applyMutation = useMutation({
-    mutationFn: (data: any) => bankApi.post('/loans/', data),
+    mutationFn: (data) => bankApi.post('/loans/', data),
     onSuccess: () => {
       toast.success('Loan approved! EMI schedule generated 🎉')
       qc.invalidateQueries({ queryKey: ['loans'] })
     },
-    onError: (e: any) => toast.error(e.response?.data?.detail || 'Loan application failed'),
+    onError: (e) => toast.error(e.response?.data?.detail || 'Loan application failed'),
   })
 
   const emiMutation = useMutation({
-    mutationFn: (loanId: string) => bankApi.post(`/loans/${loanId}/pay-emi`),
+    mutationFn: (loanId) => bankApi.post(`/loans/${loanId}/pay-emi`),
     onSuccess: () => {
       toast.success('EMI paid successfully!')
       qc.invalidateQueries({ queryKey: ['loans'] })
       qc.invalidateQueries({ queryKey: ['accounts'] })
     },
-    onError: (e: any) => toast.error(e.response?.data?.detail || 'EMI payment failed'),
+    onError: (e) => toast.error(e.response?.data?.detail || 'EMI payment failed'),
   })
 
   const principal = parseFloat(form.principal) || 0
@@ -67,7 +80,7 @@ export default function LoansPage() {
     { name: 'Interest', value: round(totalInterest) },
   ] : []
 
-  function round(n: number) { return Math.round(n * 100) / 100 }
+  function round(n) { return Math.round(n * 100) / 100 }
 
   return (
     <Box>
@@ -98,7 +111,7 @@ export default function LoansPage() {
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Application Form */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={5}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" fontWeight={700} mb={3}>Apply for Loan</Typography>
@@ -107,13 +120,18 @@ export default function LoansPage() {
                   <InputLabel>Disbursement Account</InputLabel>
                   <Select value={form.account_id} label="Disbursement Account"
                     onChange={e => setForm({ ...form, account_id: e.target.value })}>
-                    {accounts?.map((a: any) => <MenuItem key={a.id} value={a.id}>{a.account_number}</MenuItem>)}
+                    {accounts?.map((a) => <MenuItem key={a.id} value={a.id}>{a.account_number}</MenuItem>)}
                   </Select>
                 </FormControl>
                 <TextField size="small" label="Principal Amount (₹)" type="number" fullWidth
                   value={form.principal} onChange={e => setForm({ ...form, principal: e.target.value })} />
                 <TextField size="small" label="Interest Rate (% p.a.)" type="number" fullWidth
-                  value={form.interest_rate} onChange={e => setForm({ ...form, interest_rate: e.target.value })} />
+                  value={form.interest_rate}
+                  disabled
+                  helperText="Fixed rate for selected loan type"
+                  InputProps={{ readOnly: true }}
+                  sx={{ '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: 'inherit', opacity: 0.85, fontWeight: 700 } }}
+                />
                 <TextField size="small" label="Tenure (Months)" type="number" fullWidth
                   value={form.tenure_months} onChange={e => setForm({ ...form, tenure_months: e.target.value })} />
                 <TextField size="small" label="Purpose" fullWidth
@@ -146,19 +164,33 @@ export default function LoansPage() {
         </Grid>
 
         {/* EMI Breakdown Pie */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={7}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" fontWeight={700} mb={2}>EMI Breakdown</Typography>
               {emi > 0 ? (
                 <>
-                  <ResponsiveContainer width="100%" height={200}>
+                  <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
-                      <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                        <Cell fill="#00C6FF" />
-                        <Cell fill="#EF4444" />
+                      <Pie
+                        data={pieData}
+                        cx="50%" cy="45%"
+                        outerRadius={115}
+                        dataKey="value"
+                        labelLine={false}
+                        label={renderInsideLabel}
+                      >
+                        <Cell fill="#00C6FF" name="Principal" />
+                        <Cell fill="#EF4444" name="Interest" />
                       </Pie>
-                      <Tooltip formatter={(v: number) => [`₹${v.toLocaleString('en-IN')}`, '']} />
+                      <Tooltip formatter={(v, name) => [`₹${v.toLocaleString('en-IN')}`, name]} />
+                      <Legend
+                        iconType="circle"
+                        iconSize={12}
+                        formatter={(value) => (
+                          <span style={{ color: '#CBD5E1', fontWeight: 600, fontSize: 13 }}>{value}</span>
+                        )}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                   <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -175,7 +207,7 @@ export default function LoansPage() {
                   </Grid>
                 </>
               ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 280 }}>
                   <Typography color="text.secondary">Fill in loan details to see breakdown</Typography>
                 </Box>
               )}
@@ -188,7 +220,7 @@ export default function LoansPage() {
       <Typography variant="h6" fontWeight={700} mb={2}>Active Loans</Typography>
       {isLoading ? <LinearProgress /> : (
         <Grid container spacing={2}>
-          {loans?.map((loan: any) => (
+          {loans?.map((loan) => (
             <Grid item xs={12} md={6} key={loan.id}>
               <Card>
                 <CardContent sx={{ p: 3 }}>

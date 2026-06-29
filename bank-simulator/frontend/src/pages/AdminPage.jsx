@@ -18,17 +18,17 @@ export default function AdminPage() {
   const [txnCount, setTxnCount] = useState('10')
   const [loanType, setLoanType] = useState('personal')
   const [invType, setInvType] = useState('fd')
-  const [log, setLog] = useState<string[]>([])
+  const [log, setLog] = useState([])
 
-  const addLog = (msg: string) => setLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev.slice(0, 19)])
+  const addLog = (msg) => setLog(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev.slice(0, 19)])
 
   const { data: accounts } = useQuery({ queryKey: ['accounts'], queryFn: () => bankApi.get('/accounts/').then(r => r.data) })
   const { data: loans } = useQuery({ queryKey: ['loans'], queryFn: () => bankApi.get('/loans/').then(r => r.data) })
   const { data: stats } = useQuery({ queryKey: ['admin-stats'], queryFn: () => bankApi.get('/admin/stats').then(r => r.data), refetchInterval: 10000 })
 
-  const mutOpts = (label: string) => ({
-    onSuccess: (d: any) => { toast.success(`${label} successful!`); addLog(`✅ ${label}: ${JSON.stringify(d?.message || '')}`); qc.invalidateQueries() },
-    onError: (e: any) => { toast.error(e.response?.data?.detail || `${label} failed`); addLog(`❌ ${label} failed: ${e.response?.data?.detail}`) }
+  const mutOpts = (label) => ({
+    onSuccess: (d) => { toast.success(`${label} successful!`); addLog(`✅ ${label}: ${JSON.stringify(d?.message || '')}`); qc.invalidateQueries() },
+    onError: (e) => { toast.error(e.response?.data?.detail || `${label} failed`); addLog(`❌ ${label} failed: ${e.response?.data?.detail}`) }
   })
 
   const salaryMut = useMutation({ mutationFn: () => bankApi.post(`/admin/generate/salary-credit?account_id=${accountId}&amount=${salaryAmount}`), ...mutOpts('Salary Credit') })
@@ -51,9 +51,10 @@ export default function AdminPage() {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
         <AdminPanelSettings sx={{ color: '#7C3AED', fontSize: 32 }} />
         <Box>
-          <Typography variant="h4" fontWeight={800}>Admin Control Panel</Typography>
-          <Typography color="text.secondary">Generate events and monitor the Bank Simulator</Typography>
+          <Typography variant="h4" fontWeight={800} mb={1}>Admin Console</Typography>
+          <Typography color="text.secondary">Generate events and monitor The Bank</Typography>
         </Box>
+
         <Chip label="Admin Only" color="secondary" size="small" sx={{ ml: 'auto' }} />
       </Box>
 
@@ -78,7 +79,7 @@ export default function AdminPage() {
           <FormControl size="small" sx={{ minWidth: 300 }}>
             <InputLabel>Select Account</InputLabel>
             <Select value={accountId} label="Select Account" onChange={e => setAccountId(e.target.value)}>
-              {accounts?.map((a: any) => <MenuItem key={a.id} value={a.id}>{a.account_number} — ₹{a.balance.toLocaleString('en-IN')} ({a.user_id?.slice(0, 8)})</MenuItem>)}
+              {accounts?.map((a) => <MenuItem key={a.id} value={a.id}>{a.account_number} — ₹{a.balance.toLocaleString('en-IN')} ({a.user_id?.slice(0, 8)})</MenuItem>)}
             </Select>
           </FormControl>
         </CardContent>
@@ -146,7 +147,7 @@ export default function AdminPage() {
               <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                 <InputLabel>Loan</InputLabel>
                 <Select value={loanId} label="Loan" onChange={e => setLoanId(e.target.value)}>
-                  {loans?.filter((l: any) => l.status === 'active').map((l: any) => (
+                  {loans?.filter((l) => l.status === 'active').map((l) => (
                     <MenuItem key={l.id} value={l.id}>{l.loan_type} — ₹{l.emi_amount?.toLocaleString('en-IN', { maximumFractionDigits: 0 })}/mo</MenuItem>
                   ))}
                 </Select>

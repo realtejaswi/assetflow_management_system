@@ -30,10 +30,10 @@ export default function InvestmentsPage() {
   const [goldForm, setGoldForm] = useState({ grams: '' })
   const [fdForm, setFdForm] = useState({ amount: '', interest_rate: '7.5', tenure_months: '12' })
 
-  const stockMut = useMutation({ mutationFn: (d: any) => bankApi.post('/investments/stocks', d), onSuccess: () => { toast.success('Stock purchased!'); qc.invalidateQueries({ queryKey: ['stocks'] }) }, onError: (e: any) => toast.error(e.response?.data?.detail) })
-  const mfMut = useMutation({ mutationFn: (d: any) => bankApi.post('/investments/mutual-funds', d), onSuccess: () => { toast.success('MF units purchased!'); qc.invalidateQueries({ queryKey: ['mfs'] }) }, onError: (e: any) => toast.error(e.response?.data?.detail) })
-  const goldMut = useMutation({ mutationFn: (d: any) => bankApi.post('/investments/gold', d), onSuccess: () => { toast.success('Gold purchased!'); qc.invalidateQueries({ queryKey: ['gold'] }) }, onError: (e: any) => toast.error(e.response?.data?.detail) })
-  const fdMut = useMutation({ mutationFn: (d: any) => bankApi.post('/investments/fds', d), onSuccess: () => { toast.success('FD created!'); qc.invalidateQueries({ queryKey: ['fds'] }) }, onError: (e: any) => toast.error(e.response?.data?.detail) })
+  const stockMut = useMutation({ mutationFn: (d) => bankApi.post('/investments/stocks', d), onSuccess: () => { toast.success('Stock purchased!'); qc.invalidateQueries({ queryKey: ['stocks'] }) }, onError: (e) => toast.error(e.response?.data?.detail) })
+  const mfMut = useMutation({ mutationFn: (d) => bankApi.post('/investments/mutual-funds', d), onSuccess: () => { toast.success('MF units purchased!'); qc.invalidateQueries({ queryKey: ['mfs'] }) }, onError: (e) => toast.error(e.response?.data?.detail) })
+  const goldMut = useMutation({ mutationFn: (d) => bankApi.post('/investments/gold', d), onSuccess: () => { toast.success('Gold purchased!'); qc.invalidateQueries({ queryKey: ['gold'] }) }, onError: (e) => toast.error(e.response?.data?.detail) })
+  const fdMut = useMutation({ mutationFn: (d) => bankApi.post('/investments/fds', d), onSuccess: () => { toast.success('FD created!'); qc.invalidateQueries({ queryKey: ['fds'] }) }, onError: (e) => toast.error(e.response?.data?.detail) })
 
   const SUMMARY_ITEMS = [
     { label: 'Stocks', value: summary?.total_stocks_value || 0, color: '#00C6FF', icon: <TrendingUp /> },
@@ -42,7 +42,7 @@ export default function InvestmentsPage() {
     { label: 'Fixed Deposits', value: summary?.total_fd_value || 0, color: '#10B981', icon: <Savings /> },
   ]
 
-  const fmt = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+  const fmt = (n) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 
   return (
     <Box>
@@ -80,7 +80,7 @@ export default function InvestmentsPage() {
             <FormControl size="small" sx={{ minWidth: 250, mb: 3 }}>
               <InputLabel>Account</InputLabel>
               <Select value={accountId} label="Account" onChange={e => setAccountId(e.target.value)}>
-                {accounts?.map((a: any) => <MenuItem key={a.id} value={a.id}>{a.account_number} — ₹{a.balance.toLocaleString('en-IN')}</MenuItem>)}
+                {accounts?.map((a) => <MenuItem key={a.id} value={a.id}>{a.account_number} — ₹{a.balance.toLocaleString('en-IN')}</MenuItem>)}
               </Select>
             </FormControl>
 
@@ -93,7 +93,7 @@ export default function InvestmentsPage() {
                     <FormControl fullWidth size="small">
                       <InputLabel>Stock</InputLabel>
                       <Select value={stockForm.symbol} label="Stock" onChange={e => setStockForm({ ...stockForm, symbol: e.target.value })}>
-                        {stockMarket?.map((s: any) => <MenuItem key={s.symbol} value={s.symbol}>{s.symbol} — ₹{s.price}</MenuItem>)}
+                        {stockMarket?.map((s) => <MenuItem key={s.symbol} value={s.symbol}>{s.symbol} — ₹{s.price}</MenuItem>)}
                       </Select>
                     </FormControl>
                     <TextField size="small" label="Quantity" type="number" fullWidth value={stockForm.quantity} onChange={e => setStockForm({ ...stockForm, quantity: e.target.value })} />
@@ -104,7 +104,7 @@ export default function InvestmentsPage() {
                 </Grid>
                 <Grid item xs={12} md={8}>
                   <Typography variant="subtitle2" fontWeight={700} mb={2}>My Holdings</Typography>
-                  {stocks?.map((s: any) => (
+                  {stocks?.map((s) => (
                     <Box key={s.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5, borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
                       <Box>
                         <Typography fontWeight={600}>{s.symbol}</Typography>
@@ -132,7 +132,7 @@ export default function InvestmentsPage() {
                     <FormControl fullWidth size="small">
                       <InputLabel>Fund</InputLabel>
                       <Select value={mfForm.fund_code} label="Fund" onChange={e => setMfForm({ ...mfForm, fund_code: e.target.value })}>
-                        {mfMarket?.map((m: any) => <MenuItem key={m.fund_code} value={m.fund_code}>{m.name} — ₹{m.nav} NAV</MenuItem>)}
+                        {mfMarket?.map((m) => <MenuItem key={m.fund_code} value={m.fund_code}>{m.name} — ₹{m.nav} NAV</MenuItem>)}
                       </Select>
                     </FormControl>
                     <TextField size="small" label="Units" type="number" fullWidth value={mfForm.units} onChange={e => setMfForm({ ...mfForm, units: e.target.value })} />
@@ -142,7 +142,7 @@ export default function InvestmentsPage() {
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={8}>
-                  {mfs?.map((m: any) => (
+                  {mfs?.map((m) => (
                     <Box key={m.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5, borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
                       <Box>
                         <Typography fontWeight={600} fontSize="0.9rem">{m.fund_name}</Typography>
@@ -180,7 +180,7 @@ export default function InvestmentsPage() {
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={8}>
-                  {gold?.map((g: any) => (
+                  {gold?.map((g) => (
                     <Box key={g.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5, borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
                       <Box>
                         <Typography fontWeight={600}>🥇 {g.grams}g {g.gold_type}</Typography>
@@ -215,7 +215,7 @@ export default function InvestmentsPage() {
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={8}>
-                  {fds?.map((f: any) => (
+                  {fds?.map((f) => (
                     <Box key={f.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 1.5, borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
                       <Box>
                         <Typography fontWeight={600}>FD — {f.tenure_months} months @ {f.interest_rate}%</Typography>

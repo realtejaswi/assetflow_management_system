@@ -9,6 +9,7 @@ import {
   ChevronLeft, Logout, AutoGraph
 } from '@mui/icons-material'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const DRAWER_WIDTH = 270
 
@@ -30,8 +31,9 @@ export default function AssetFlowLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Demo user
-  const userId = localStorage.getItem('assetflow_user_id') || 'demo-user'
+  // Auth user
+  const { user, logout } = useAuth()
+  const userId = user?.id || 'demo-user'
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', background: '#050B18' }}>
@@ -111,13 +113,22 @@ export default function AssetFlowLayout() {
         </List>
 
         <Divider sx={{ borderColor: 'rgba(99,102,241,0.1)' }} />
-        <Box sx={{ p: 1.5 }}>
-          <ListItemButton sx={{ borderRadius: '12px' }}>
+        <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center' }}>
+          <ListItemButton sx={{ borderRadius: '12px', flex: 1 }}>
             <ListItemIcon sx={{ minWidth: 40 }}>
-              <Avatar sx={{ width: 32, height: 32, background: 'linear-gradient(135deg, #6366F1, #10B981)', fontSize: '0.85rem' }}>A</Avatar>
+              <Avatar sx={{ width: 32, height: 32, background: 'linear-gradient(135deg, #6366F1, #10B981)', fontSize: '0.85rem' }}>
+                {user?.full_name?.charAt(0)?.toUpperCase() || 'A'}
+              </Avatar>
             </ListItemIcon>
-            {open && <ListItemText primary="AssetFlow User" secondary={userId.slice(0, 12) + '...'} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 600 }} secondaryTypographyProps={{ fontSize: '0.7rem' }} />}
+            {open && <ListItemText primary={user?.full_name || 'AssetFlow User'} secondary={user?.email || 'user@example.com'} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 600 }} secondaryTypographyProps={{ fontSize: '0.7rem' }} />}
           </ListItemButton>
+          {open && (
+            <Tooltip title="Logout">
+              <IconButton onClick={logout} sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}>
+                <Logout fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
 
         <IconButton

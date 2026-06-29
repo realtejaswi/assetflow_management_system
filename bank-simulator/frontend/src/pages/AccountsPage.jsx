@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 export default function AccountsPage() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ account_type: 'Savings', initial_deposit: 0, nickname: '' })
+  const [form, setForm] = useState({ account_type: 'savings', initial_deposit: 0, nickname: '' })
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts'],
@@ -20,14 +20,14 @@ export default function AccountsPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => bankApi.post('/accounts/', data),
+    mutationFn: (data) => bankApi.post('/accounts/', data),
     onSuccess: () => {
       toast.success('Account created successfully!')
       qc.invalidateQueries({ queryKey: ['accounts'] })
       setOpen(false)
-      setForm({ account_type: 'Savings', initial_deposit: 0, nickname: '' })
+      setForm({ account_type: 'savings', initial_deposit: 0, nickname: '' })
     },
-    onError: (e: any) => toast.error(e.response?.data?.detail || 'Failed to create account')
+    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to create account')
   })
 
   return (
@@ -46,7 +46,7 @@ export default function AccountsPage() {
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
       ) : (
         <Grid container spacing={3}>
-          {accounts?.map((account: any) => (
+          {accounts?.map((account) => (
             <Grid item xs={12} md={6} lg={4} key={account.id}>
               <Card sx={{ height: '100%', position: 'relative', overflow: 'hidden', borderRadius: 3, border: '1px solid rgba(148,163,184,0.1)' }}>
                 <Box sx={{
@@ -87,9 +87,8 @@ export default function AccountsPage() {
               select label="Account Type" fullWidth
               value={form.account_type} onChange={e => setForm({ ...form, account_type: e.target.value })}
             >
-              <MenuItem value="Savings">Savings</MenuItem>
-              <MenuItem value="Current">Current</MenuItem>
-              <MenuItem value="Salary">Salary</MenuItem>
+              <MenuItem value="savings">Savings</MenuItem>
+              <MenuItem value="current">Current</MenuItem>
             </TextField>
             <TextField
               label="Nickname (Optional)" fullWidth

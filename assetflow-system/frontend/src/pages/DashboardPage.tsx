@@ -5,11 +5,12 @@ import {
 } from '@mui/material'
 import {
   AccountBalance, TrendingUp, TrendingDown, AccountBalanceWallet,
-  ArrowUpward, ArrowDownward, FavoriteOutlined, Refresh, AutoGraph
+  ArrowUpward, ArrowDownward, FavoriteOutlined, Refresh, AutoGraph, Sync
 } from '@mui/icons-material'
 import { useQuery } from '@tanstack/react-query'
 import { useOutletContext } from 'react-router-dom'
-import { assetflowApi, mlApi } from '../api/assetflowApi'
+import { assetflowApi, mlApi, bankApi } from '../api/assetflowApi'
+import toast from 'react-hot-toast'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, RadialBarChart, RadialBar, PieChart, Pie, Cell, Legend
@@ -71,6 +72,7 @@ const ASSET_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#06B6D4']
 
 export default function DashboardPage() {
   const { userId } = useOutletContext<{ userId: string }>() || { userId: 'demo-user' }
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const { data: overview, refetch, isLoading } = useQuery({
     queryKey: ['af-overview', userId],
@@ -98,6 +100,36 @@ export default function DashboardPage() {
     { name: 'FD', value: overview.asset_breakdown?.fixed_deposits || 0 },
   ].filter(d => d.value > 0) : []
 
+  const handleSync = async () => {
+    setIsSyncing(true)
+    try {
+      const [accountsRes, invRes] = await Promise.all([
+        bankApi.get('/accounts/'),
+        bankApi.get('/investments/summary')
+      ])
+      
+      const totalBankBalance = accountsRes.data.reduce((sum: number, acc: any) => sum + acc.balance, 0)
+      const invData = invRes.data.breakdown || {}
+
+      await assetflowApi.post('/dashboard/sync', {
+        user_id: userId,
+        bank_balance: totalBankBalance,
+        stock_value: invData.stocks || 0,
+        mf_value: invData.mutual_funds || 0,
+        gold_value: invData.gold || 0,
+        fd_value: invData.fixed_deposits || 0
+      })
+      
+      toast.success('Data synchronized successfully')
+      refetch()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to synchronize data')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
   return (
     <Box>
       {/* Header */}
@@ -112,7 +144,17 @@ export default function DashboardPage() {
           <Typography color="text.secondary">Your complete financial picture, powered by AI</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Chip label="🔴 Live" color="error" size="small" variant="outlined" />
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={handleSync} 
+            disabled={isSyncing}
+            startIcon={isSyncing ? <Sync sx={{ animation: 'spin 2s linear infinite' }} /> : <Sync />}
+            sx={{ borderColor: 'rgba(99,102,241,0.5)', color: '#6366F1' }}
+          >
+            {isSyncing ? 'Syncing...' : 'Sync with Bank'}
+          </Button>
+          <Chip label="🔴 Live" color="error" size="small" variant="outlined" sx={{ alignSelf: 'center' }} />
           <IconButton onClick={() => refetch()} sx={{ bgcolor: 'rgba(99,102,241,0.1)' }}>
             <Refresh sx={{ color: '#6366F1' }} />
           </IconButton>

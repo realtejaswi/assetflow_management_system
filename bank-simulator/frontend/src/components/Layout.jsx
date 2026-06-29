@@ -61,17 +61,16 @@ export default function Layout() {
           }}>
             <AccountBalance sx={{ fontSize: 22, color: '#000' }} />
           </Box>
-          {open && (
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} sx={{
-                background: 'linear-gradient(135deg, #00C6FF, #7C3AED)',
-                backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-              }}>
-                Bank Simulator
-              </Typography>
-              <Typography variant="caption" color="text.secondary">Financial Platform</Typography>
-            </Box>
-          )}
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            {open && (
+              <Box>
+                <Typography variant="subtitle1" fontWeight={800} sx={{ background: 'linear-gradient(135deg, #00C6FF, #0072FF)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  The Bank
+                </Typography>
+                <Typography variant="caption" color="text.secondary">Financial Ecosystem</Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
 
         <Divider sx={{ borderColor: 'rgba(148,163,184,0.1)' }} />
