@@ -7,7 +7,6 @@ import { SmartToy, Person, Send, AutoAwesome, Refresh } from '@mui/icons-materia
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { aiApi } from '../api/assetflowApi'
 
-interface Message { role: 'user' | 'assistant'; content: string; timestamp: Date }
 
 const QUICK_TOPICS = [
   { label: '💰 Budget Plan', topic: 'How to create a monthly budget?' },
@@ -28,14 +27,14 @@ const REC_TYPES = [
 ]
 
 export default function AIAdvisorPage() {
-  const [messages, setMessages] = useState<Message[]>([{
+  const [messages, setMessages] = useState([{
     role: 'assistant',
     content: '👋 Hello! I\'m **AssetFlow AI**, your personal financial advisor powered by phi3.\n\nI can help you with:\n• 📊 Budget planning and expense reduction\n• 💰 Investment strategies (SIP, MF, stocks, gold)\n• 🧾 Tax optimization (80C, 80D, NPS, HRA)\n• 💳 Debt reduction strategies\n• 🛡️ Emergency fund planning\n• 📈 Wealth building advice\n\nAsk me anything about your finances!',
     timestamp: new Date(),
   }])
   const [input, setInput] = useState('')
   const [recType, setRecType] = useState('general')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef(null)
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -46,7 +45,7 @@ export default function AIAdvisorPage() {
   })
 
   const chatMut = useMutation({
-    mutationFn: (message: string) => aiApi.post('/chat', {
+    mutationFn: (message) => aiApi.post('/chat', {
       user_id: 'demo-user',
       message,
       conversation_history: messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
@@ -80,12 +79,12 @@ export default function AIAdvisorPage() {
     setInput('')
   }
 
-  const sendQuick = (topic: string) => {
+  const sendQuick = (topic) => {
     setMessages(prev => [...prev, { role: 'user', content: topic, timestamp: new Date() }])
     chatMut.mutate(topic)
   }
 
-  const formatMessage = (content: string) => {
+  const formatMessage = (content) => {
     return content.split('\n').map((line, i) => (
       <Typography key={i} variant="body2" sx={{ lineHeight: 1.8, '& strong': { fontWeight: 700, color: 'primary.light' } }}>
         {line.startsWith('**') ? <strong>{line.replace(/\*\*/g, '')}</strong> :

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
@@ -15,6 +16,15 @@ app = FastAPI(
     title="AssetFlow ML Service",
     version="1.0.0",
     description="Machine Learning predictions for AssetFlow",
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -54,6 +64,10 @@ class HealthScoreRequest(BaseModel):
     total_assets: float
     monthly_emi: float = 0
     emergency_fund: float = 0
+
+
+class ExpenseInsightsRequest(BaseModel):
+    transactions: List[Transaction]
 
 
 # ── Endpoints ─────────────────────────────────────────────────
@@ -156,6 +170,62 @@ async def calculate_health_score(req: HealthScoreRequest):
         "grade": grade,
         "breakdown": breakdown,
         "recommendations": _get_score_recommendations(breakdown),
+    }
+
+
+@app.post("/predict/expense-insights")
+async def get_expense_insights(req: ExpenseInsightsRequest):
+    """Analyze transactions to find top merchant, recurring expenses, etc."""
+    transactions = req.transactions
+    if not transactions:
+        return {"top_merchant": None, "recurring_subscriptions": [], "daily_average": 0}
+
+    # Top merchant
+    merchant_totals = {}
+    for t in transactions:
+        if t.amount < 0 and t.merchant:
+            m = t.merchant.strip().upper()
+            if m:
+                merchant_totals[m] = merchant_totals.get(m, 0) + abs(t.amount)
+    
+    top_merchant = None
+    if merchant_totals:
+        top_merchant = max(merchant_totals.items(), key=lambda x: x[1])
+
+    # Recurring Subscriptions (same merchant, same exact amount > 0, occurring more than once)
+    recurring = {}
+    for t in transactions:
+        if t.amount < 0 and t.merchant:
+            key = f"{t.merchant.strip().upper()}_{abs(t.amount)}"
+            if key not in recurring:
+                recurring[key] = {"merchant": t.merchant.strip(), "amount": abs(t.amount), "count": 1}
+            else:
+                recurring[key]["count"] += 1
+                
+    subs = [v for v in recurring.values() if v["count"] > 1]
+    subs = sorted(subs, key=lambda x: x["amount"], reverse=True)
+
+    # Daily average
+    import datetime
+    dates = set()
+    total_spend = 0
+    for t in transactions:
+        if t.amount < 0:
+            total_spend += abs(t.amount)
+            if t.timestamp:
+                try:
+                    dt = datetime.datetime.fromisoformat(t.timestamp.replace("Z", "+00:00"))
+                    dates.add(dt.date())
+                except:
+                    pass
+    
+    daily_avg = total_spend / len(dates) if dates else 0
+
+    return {
+        "top_merchant": {"name": top_merchant[0], "total": top_merchant[1]} if top_merchant else None,
+        "recurring_subscriptions": subs[:5],
+        "daily_average": daily_avg,
+        "model": "statistical_analysis"
     }
 
 

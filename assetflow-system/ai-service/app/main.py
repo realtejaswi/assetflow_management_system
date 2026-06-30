@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, List
 import logging
 
 from app.ollama_client import generate_response, check_ollama_health
+from fastapi.middleware.cors import CORSMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -12,6 +13,15 @@ app = FastAPI(
     title="AssetFlow AI Advisor Service",
     version="1.0.0",
     description="AI-powered financial advisor using Ollama (phi3)",
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 SYSTEM_PROMPT = """You are AssetFlow AI, an expert Indian certified financial planner (CFP).

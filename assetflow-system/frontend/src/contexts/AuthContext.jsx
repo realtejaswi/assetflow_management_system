@@ -1,25 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { bankApi } from '../api/assetflowApi'
 
-interface AuthContextType {
-  isAuthenticated: boolean
-  loading: boolean
-  user: any
-  login: (email: string, password: string) => Promise<void>
-  register: (data: any) => Promise<void>
-  logout: () => void
-}
+const AuthContext = createContext({})
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType)
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-
-  useEffect(() => {
-    checkAuth()
-  }, [])
+  const [user, setUser] = useState(null)
 
   const checkAuth = async () => {
     try {
@@ -40,7 +27,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  useEffect(() => {
+    checkAuth()
+  }, [])
+
+  const login = async (email, password) => {
     const { data } = await bankApi.post('/auth/login', { email, password })
     localStorage.setItem('assetflow_access_token', data.access_token)
     localStorage.setItem('assetflow_refresh_token', data.refresh_token)
@@ -49,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true)
   }
 
-  const register = async (userData: any) => {
+  const register = async (userData) => {
     await bankApi.post('/auth/register', userData)
   }
 

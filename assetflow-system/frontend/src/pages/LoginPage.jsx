@@ -21,14 +21,14 @@ export default function LoginPage() {
     full_name: '', email: '', phone: '', password: '', role: 'user'
   })
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true); setError('')
     try {
       await login(loginForm.email, loginForm.password)
       toast.success('Welcome back to AssetFlow!')
       navigate('/dashboard')
-    } catch (err: any) {
+    } catch (err) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
         setError(detail[0].msg);
@@ -38,14 +38,14 @@ export default function LoginPage() {
     } finally { setLoading(false) }
   }
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
     setLoading(true); setError('')
     try {
       await register(registerForm)
       toast.success('Account created successfully! Please login.')
       setTab(0)
-    } catch (err: any) {
+    } catch (err) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
         setError(detail[0].msg);
@@ -57,26 +57,35 @@ export default function LoginPage() {
 
   return (
     <Box sx={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(ellipse at top left, rgba(99,102,241,0.15) 0%, #050B18 50%, rgba(16,185,129,0.1) 100%)',
+      minHeight: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.15) 0%, #050B18 70%)',
       p: 2
     }}>
       <Box sx={{ width: '100%', maxWidth: 460 }}>
         {/* Logo */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Box sx={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 72, height: 72, borderRadius: '20px',
-            background: 'linear-gradient(135deg, #6366F1, #10B981)',
-            boxShadow: '0 0 40px rgba(99,102,241,0.4)', mb: 2
+            width: 96, height: 96, borderRadius: '24px',
+            boxShadow: '0 0 40px rgba(99,102,241,0.4)', mb: 3,
+            overflow: 'hidden', display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center'
           }}>
-            <AutoGraph sx={{ fontSize: 36, color: '#fff' }} />
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="AssetFlow Logo"
+              sx={{
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                transform: 'scale(1.35)'
+              }}
+            />
           </Box>
           <Typography variant="h4" fontWeight={800} sx={{
             background: 'linear-gradient(135deg, #6366F1, #10B981)',
             backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
           }}>
-            AssetFlow
+            AssetFlow Management System
           </Typography>
           <Typography color="text.secondary" variant="body2" mt={0.5}>
             Financial Intelligence & Analytics

@@ -153,6 +153,7 @@ class SyncData(BaseModel):
     mf_value: float
     gold_value: float
     fd_value: float
+    transactions: Optional[list] = []
 
 @router.post("/sync")
 async def sync_dashboard_data(data: SyncData):
@@ -181,5 +182,30 @@ async def sync_dashboard_data(data: SyncData):
         }},
         upsert=True
     )
+    
+    # Update aggregated_transactions
+    if data.transactions:
+        # Clear old transactions to avoid duplicates for now
+        await db.aggregated_transactions.delete_many({"user_id": data.user_id})
+        
+        # Prepare docs
+        docs = []
+        for t in data.transactions:
+            # t might have 'id' instead of '_id', 'timestamp' might be a string
+            ts = t.get("timestamp")
+            if isinstance(ts, str):
+                ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            
+            docs.append({
+                "user_id": data.user_id,
+                "amount": t.get("amount", 0),
+                "merchant": t.get("merchant", ""),
+                "description": t.get("description", ""),
+                "category": t.get("category", "Other"),
+                "timestamp": ts or datetime.utcnow()
+            })
+            
+        if docs:
+            await db.aggregated_transactions.insert_many(docs)
     
     return {"message": "Data synchronized successfully"}

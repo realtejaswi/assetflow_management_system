@@ -1,17 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   Box, Drawer, Typography, List, ListItem, ListItemButton,
   ListItemIcon, ListItemText, Avatar, Divider, Chip, Tooltip, IconButton
 } from '@mui/material'
 import {
   Dashboard, BarChart, AccountBalance, CreditScore, Timeline,
-  Receipt, SmartToy, FavoriteOutlined, Notifications, Settings,
-  ChevronLeft, Logout, AutoGraph
+  Receipt, SmartToy, FavoriteOutlined, Settings,
+  Logout
 } from '@mui/icons-material'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-const DRAWER_WIDTH = 270
+
 
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard', icon: <Dashboard />, color: '#6366F1' },
@@ -22,12 +22,34 @@ const NAV_ITEMS = [
   { path: '/tax', label: 'Tax Dashboard', icon: <Receipt />, color: '#8B5CF6' },
   { path: '/ai-advisor', label: 'AI Advisor', icon: <SmartToy />, color: '#EC4899' },
   { path: '/health-score', label: 'Health Score', icon: <FavoriteOutlined />, color: '#22C55E' },
-  { path: '/alerts', label: 'Alerts', icon: <Notifications />, color: '#F97316' },
+
   { path: '/settings', label: 'Settings', icon: <Settings />, color: '#94A3B8' },
 ]
 
 export default function AssetFlowLayout() {
-  const [open, setOpen] = useState(true)
+  const [drawerWidth, setDrawerWidth] = useState(330)
+  const [isDragging, setIsDragging] = useState(false)
+  const isDraggingRef = useRef(false)
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isDraggingRef.current) {
+        setDrawerWidth(Math.max(72, Math.min(e.clientX, 600)))
+      }
+    }
+    const handleMouseUp = () => {
+      isDraggingRef.current = false
+      setIsDragging(false)
+    }
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [])
+
+  const open = drawerWidth > 150
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -41,38 +63,47 @@ export default function AssetFlowLayout() {
         variant="permanent"
         open={open}
         sx={{
-          width: open ? DRAWER_WIDTH : 72,
+          width: drawerWidth,
           flexShrink: 0,
-          transition: 'width 0.3s',
+          transition: isDragging ? 'none' : 'width 0.3s ease',
           '& .MuiDrawer-paper': {
-            width: open ? DRAWER_WIDTH : 72,
-            transition: 'width 0.3s',
+            width: drawerWidth,
+            transition: isDragging ? 'none' : 'width 0.3s ease',
             overflow: 'hidden',
             background: 'rgba(12,21,38,0.97)',
             backdropFilter: 'blur(20px)',
-            borderRight: '1px solid rgba(99,102,241,0.15)',
+            borderRight: drawerWidth > 150 ? '1px solid rgba(99,102,241,0.15)' : 'none',
           },
         }}
       >
         {/* Logo */}
         <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 2.5, minHeight: 64 }}>
           <Box sx={{
-            width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
-            background: 'linear-gradient(135deg, #6366F1, #10B981)',
+            width: 48, height: 48, borderRadius: '12px', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             mr: open ? 1.5 : 0, boxShadow: '0 0 20px rgba(99,102,241,0.4)',
+            overflow: 'hidden'
           }}>
-            <AutoGraph sx={{ fontSize: 22, color: '#fff' }} />
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="AssetFlow Logo"
+              sx={{
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                transform: 'scale(0.95)'
+              }}
+            />
           </Box>
           {open && (
             <Box>
-              <Typography variant="subtitle1" fontWeight={800} sx={{
-                background: 'linear-gradient(135deg, #6366F1, #10B981)',
-                backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              <Typography variant="subtitle1" fontWeight={600} sx={{
+                color: '#60A5FA',
+                fontSize: '0.95rem',
+                whiteSpace: 'nowrap'
               }}>
-                AssetFlow
+                AssetFlow Management System
               </Typography>
-              <Typography variant="caption" color="text.secondary">Financial Intelligence</Typography>
             </Box>
           )}
         </Box>
@@ -131,17 +162,20 @@ export default function AssetFlowLayout() {
           )}
         </Box>
 
-        <IconButton
-          onClick={() => setOpen(!open)}
-          sx={{
-            position: 'absolute', right: -12, top: 20,
-            backgroundColor: '#1E293B', border: '1px solid rgba(99,102,241,0.2)',
-            width: 24, height: 24, zIndex: 10,
-            '&:hover': { backgroundColor: '#2D3748' }
+        {/* Resize Handle */}
+        <Box
+          onMouseDown={(e) => {
+            e.preventDefault()
+            isDraggingRef.current = true
+            setIsDragging(true)
           }}
-        >
-          <ChevronLeft sx={{ fontSize: 16, transform: open ? 'rotate(0deg)' : 'rotate(180deg)', transition: '0.3s' }} />
-        </IconButton>
+          sx={{
+            position: 'absolute', right: 0, top: 0, bottom: 0, width: 6,
+            cursor: 'col-resize', zIndex: 10,
+            '&:hover': { backgroundColor: 'rgba(99,102,241,0.5)' },
+            backgroundColor: 'transparent', transition: 'background-color 0.2s'
+          }}
+        />
       </Drawer>
 
       <Box component="main" sx={{ flex: 1, overflow: 'auto', p: 3 }}>

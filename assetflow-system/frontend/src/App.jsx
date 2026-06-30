@@ -10,6 +10,11 @@ import AssetFlowLayout from './components/AssetFlowLayout'
 import DashboardPage from './pages/DashboardPage'
 import TaxDashboardPage from './pages/TaxDashboardPage'
 import AIAdvisorPage from './pages/AIAdvisorPage'
+import ExpenseAnalyticsPage from './pages/ExpenseAnalyticsPage'
+import AssetTrackerPage from './pages/AssetTrackerPage'
+import LoanDashboardPage from './pages/LoanDashboardPage'
+import CashFlowPage from './pages/CashFlowPage'
+import HealthScorePage from './pages/HealthScorePage'
 import { Box, Typography, CircularProgress } from '@mui/material'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -19,54 +24,23 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 15000, retry: 1 } }
 })
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#050B18' }}><CircularProgress /></Box>
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
 }
 
-// Placeholder pages
-const ExpensePage = () => (
-  <Box>
-    <Typography variant="h4" fontWeight={800} mb={2}>Expense Analytics</Typography>
-    <Typography color="text.secondary">Expense charts load from AssetFlow backend. Ensure consumer service is running to see data.</Typography>
-  </Box>
-)
 
-const AssetTrackerPage = () => (
-  <Box>
-    <Typography variant="h4" fontWeight={800} mb={2}>Asset Tracker</Typography>
-    <Typography color="text.secondary">Track stocks, mutual funds, gold, and fixed deposits — aggregated from The Bank events.</Typography>
-  </Box>
-)
 
-const LoanDashboardPage = () => (
-  <Box>
-    <Typography variant="h4" fontWeight={800} mb={2}>Loan Dashboard</Typography>
-    <Typography color="text.secondary">Outstanding loans and EMI schedules are aggregated from The Bank events.</Typography>
-  </Box>
-)
 
-const CashFlowPage = () => (
-  <Box>
-    <Typography variant="h4" fontWeight={800} mb={2}>Cash Flow Forecasting</Typography>
-    <Typography color="text.secondary">30/90/180-day cash flow forecasts using Prophet ML model.</Typography>
-  </Box>
-)
 
-const HealthScorePage = () => (
-  <Box>
-    <Typography variant="h4" fontWeight={800} mb={2}>Financial Health Score</Typography>
-    <Typography color="text.secondary">Your financial health score breakdown (0-100).</Typography>
-  </Box>
-)
 
-const AlertsPage = () => (
-  <Box>
-    <Typography variant="h4" fontWeight={800} mb={2}>Alerts</Typography>
-    <Typography color="text.secondary">Budget alerts, anomaly detection, and EMI reminders.</Typography>
-  </Box>
-)
+
+
+
+
+
+
 
 const SettingsPage = () => (
   <Box>
@@ -90,14 +64,14 @@ export default function App() {
               <Route path="/" element={<ProtectedRoute><AssetFlowLayout /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardPage />} />
-                <Route path="expenses" element={<ExpensePage />} />
+                <Route path="expenses" element={<ExpenseAnalyticsPage />} />
                 <Route path="assets" element={<AssetTrackerPage />} />
                 <Route path="loans" element={<LoanDashboardPage />} />
                 <Route path="cashflow" element={<CashFlowPage />} />
                 <Route path="tax" element={<TaxDashboardPage />} />
                 <Route path="ai-advisor" element={<AIAdvisorPage />} />
                 <Route path="health-score" element={<HealthScorePage />} />
-                <Route path="alerts" element={<AlertsPage />} />
+
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
