@@ -154,6 +154,7 @@ class SyncData(BaseModel):
     gold_value: float
     fd_value: float
     transactions: Optional[list] = []
+    loans: Optional[list] = []
 
 @router.post("/sync")
 async def sync_dashboard_data(data: SyncData):
@@ -178,6 +179,7 @@ async def sync_dashboard_data(data: SyncData):
             "total_mf_value": data.mf_value,
             "total_gold_value": data.gold_value,
             "total_fd_value": data.fd_value,
+            "loans": data.loans,
             "last_updated": datetime.utcnow()
         }},
         upsert=True
@@ -196,9 +198,17 @@ async def sync_dashboard_data(data: SyncData):
             if isinstance(ts, str):
                 ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
             
+            # Negate amount for debit transactions
+            txn_type = t.get("transaction_type", "deposit")
+            raw_amount = t.get("amount", 0)
+            if txn_type in ["withdrawal", "upi", "transfer"]:
+                amount = -abs(raw_amount)
+            else:
+                amount = abs(raw_amount)
+
             docs.append({
                 "user_id": data.user_id,
-                "amount": t.get("amount", 0),
+                "amount": amount,
                 "merchant": t.get("merchant", ""),
                 "description": t.get("description", ""),
                 "category": t.get("category", "Other"),

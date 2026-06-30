@@ -78,10 +78,11 @@ export default function DashboardPage() {
   const handleSync = async () => {
     setIsSyncing(true)
     try {
-      const [accountsRes, invRes, txnsRes] = await Promise.all([
+      const [accountsRes, invRes, txnsRes, loansRes] = await Promise.all([
         bankApi.get('/accounts/'),
         bankApi.get('/investments/summary'),
-        bankApi.get('/transactions?limit=500')
+        bankApi.get('/transactions/?limit=200'),
+        bankApi.get('/loans/')
       ])
       
       const totalBankBalance = accountsRes.data.reduce((sum, acc) => sum + acc.balance, 0)
@@ -94,7 +95,8 @@ export default function DashboardPage() {
         mf_value: invData.mutual_funds || 0,
         gold_value: invData.gold || 0,
         fd_value: invData.fixed_deposits || 0,
-        transactions: txnsRes.data
+        transactions: txnsRes.data,
+        loans: loansRes.data
       })
       
       toast.success('Data synchronized successfully')
@@ -191,10 +193,10 @@ export default function DashboardPage() {
                   { label: 'Total Liabilities', value: fmt(overview?.total_liabilities), color: '#F59E0B' },
                   { label: 'Savings Rate', value: `${overview?.savings_rate || 0}%`, color: '#6366F1' },
                 ].map(item => (
-                  <Grid item xs={6} key={item.label}>
-                    <Box sx={{ p: 2, borderRadius: 3, bgcolor: `${item.color}10`, border: `1px solid ${item.color}25` }}>
+                  <Grid item xs={6} sm={6} key={item.label}>
+                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${item.color}10`, border: `1px solid ${item.color}25`, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Typography variant="caption" color="text.secondary">{item.label}</Typography>
-                      <Typography variant="h6" fontWeight={700} sx={{ color: item.color }}>{item.value}</Typography>
+                      <Typography variant="h6" fontWeight={700} sx={{ color: item.color, wordBreak: 'break-word' }}>{item.value}</Typography>
                     </Box>
                   </Grid>
                 ))}

@@ -63,13 +63,13 @@ export default function CashFlowPage() {
             upper: null
         }))
 
-        // The forecast endpoint returns an array of { ds, yhat, yhat_lower, yhat_upper }
+        // The forecast endpoint returns an array of { date, predicted_balance, lower, upper }
         const futureData = forecastData.map(item => ({
-            date: item.ds.split('T')[0],
+            date: item.date,
             actual: null,
-            predicted: item.yhat,
-            lower: item.yhat_lower,
-            upper: item.yhat_upper
+            predicted: item.predicted_balance,
+            lower: item.lower,
+            upper: item.upper
         }))
         
         // Link the last actual data point to the prediction line so it's continuous

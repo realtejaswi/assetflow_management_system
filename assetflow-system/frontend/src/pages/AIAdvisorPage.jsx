@@ -86,7 +86,7 @@ export default function AIAdvisorPage() {
 
   const formatMessage = (content) => {
     return content.split('\n').map((line, i) => (
-      <Typography key={i} variant="body2" sx={{ lineHeight: 1.8, '& strong': { fontWeight: 700, color: 'primary.light' } }}>
+      <Typography key={i} variant="body2" sx={{ lineHeight: 1.8, '& strong': { fontWeight: 700, color: (theme) => theme.palette.mode === 'dark' ? 'primary.light' : 'primary.dark' } }}>
         {line.startsWith('**') ? <strong>{line.replace(/\*\*/g, '')}</strong> :
          line.startsWith('•') ? <Box component="span" sx={{ display: 'flex', gap: 1 }}>• {line.slice(1)}</Box> : line}
       </Typography>
@@ -175,7 +175,7 @@ export default function AIAdvisorPage() {
               </Avatar>
               <Box sx={{
                 maxWidth: '80%', p: 2, borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-                bgcolor: msg.role === 'user' ? 'rgba(99,102,241,0.15)' : 'rgba(12,21,38,0.8)',
+                bgcolor: msg.role === 'user' ? 'rgba(99,102,241,0.15)' : 'background.default',
                 border: `1px solid ${msg.role === 'user' ? 'rgba(99,102,241,0.3)' : 'rgba(236,72,153,0.2)'}`,
               }}>
                 {formatMessage(msg.content)}
@@ -190,7 +190,7 @@ export default function AIAdvisorPage() {
               <Avatar sx={{ width: 32, height: 32, background: 'linear-gradient(135deg, #EC4899, #6366F1)' }}>
                 <SmartToy sx={{ fontSize: 18 }} />
               </Avatar>
-              <Box sx={{ p: 2, borderRadius: '4px 16px 16px 16px', bgcolor: 'rgba(12,21,38,0.8)', border: '1px solid rgba(236,72,153,0.2)' }}>
+              <Box sx={{ p: 2, borderRadius: '4px 16px 16px 16px', bgcolor: 'background.default', border: '1px solid rgba(236,72,153,0.2)' }}>
                 <CircularProgress size={16} sx={{ color: '#EC4899' }} />
               </Box>
             </Box>

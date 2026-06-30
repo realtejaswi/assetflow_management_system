@@ -17,6 +17,7 @@ Both systems communicate via **Redis Pub/Sub** in real time.
 
 ```
 React (Bank Simulator UI)          React (AssetFlow UI)
+         |                             (Tax Calculator)
          |                                  |
 FastAPI (Bank Simulator Backend)   FastAPI (API Gateway)
          |                                  |
@@ -26,9 +27,8 @@ FastAPI (Bank Simulator Backend)   FastAPI (API Gateway)
                                            |
                               ┌────────────┼────────────┐
                            ETL Service  ML Service   AI Service
-                                           |
-                                      Tax Service
-                                      Notification Service
+                                      (Prophet ML)      |
+                                                   Ollama (phi3)
 ```
 
 ---

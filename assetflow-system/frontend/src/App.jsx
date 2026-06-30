@@ -5,7 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 
-import { assetflowTheme } from './theme/assetflowTheme'
+import { getAssetflowTheme } from './theme/assetflowTheme'
 import AssetFlowLayout from './components/AssetFlowLayout'
 import DashboardPage from './pages/DashboardPage'
 import TaxDashboardPage from './pages/TaxDashboardPage'
@@ -15,6 +15,7 @@ import AssetTrackerPage from './pages/AssetTrackerPage'
 import LoanDashboardPage from './pages/LoanDashboardPage'
 import CashFlowPage from './pages/CashFlowPage'
 import HealthScorePage from './pages/HealthScorePage'
+import SettingsPage from './pages/SettingsPage'
 import { Box, Typography, CircularProgress } from '@mui/material'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -42,18 +43,32 @@ function ProtectedRoute({ children }) {
 
 
 
-const SettingsPage = () => (
-  <Box>
-    <Typography variant="h4" fontWeight={800} mb={2}>Settings</Typography>
-    <Typography color="text.secondary">Configure AssetFlow preferences and connected bank accounts.</Typography>
-  </Box>
-)
+
+
+export const ThemeModeContext = React.createContext({ toggleThemeMode: () => {}, mode: 'dark' })
 
 export default function App() {
+  const [mode, setMode] = React.useState(() => {
+    const saved = localStorage.getItem('themeMode')
+    return saved ? saved : 'dark'
+  })
+
+  React.useEffect(() => {
+    localStorage.setItem('themeMode', mode)
+  }, [mode])
+
+  const themeModeValue = React.useMemo(() => ({
+    toggleThemeMode: () => setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light')),
+    mode,
+  }), [mode])
+
+  const theme = React.useMemo(() => getAssetflowTheme(mode), [mode])
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={assetflowTheme}>
-        <CssBaseline />
+    <ThemeModeContext.Provider value={themeModeValue}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
         <BrowserRouter>
           <AuthProvider>
             <Toaster position="top-right" toastOptions={{
@@ -80,5 +95,6 @@ export default function App() {
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
+    </ThemeModeContext.Provider>
   )
 }

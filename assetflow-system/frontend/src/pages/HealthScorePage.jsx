@@ -41,7 +41,7 @@ export default function HealthScorePage() {
     const fetchHealthData = async () => {
       try {
         setLoading(true)
-        const userId = user?._id || 'demo-user'
+        const userId = user?.id || 'demo-user'
         
         // 1. Fetch Overview to get raw numbers
         const overviewRes = await assetflowApi.get(`/dashboard/overview?user_id=${userId}`)
@@ -128,10 +128,10 @@ export default function HealthScorePage() {
         metric: 'N/A'
     },
     { 
-        id: 'net_worth_positive',
+        id: 'net_worth_health',
         title: 'Net Worth Health', 
         icon: <AccountBalance sx={{ color: '#06B6D4' }} />, 
-        data: breakdown.net_worth_positive,
+        data: breakdown.net_worth_health,
         desc: 'Assets minus liabilities. Must be comfortably positive.',
         metric: 'N/A'
     },

@@ -128,11 +128,11 @@ async def monthly_trend(months: int = Query(6, ge=1, le=12), current_user=Depend
             month_end = next_month.replace(day=1)
 
         pipe_income = [
-            {"$match": {"user_id": user_id, "timestamp": {"$gte": month_start, "$lt": month_end}, "amount": {"$gt": 0}}},
+            {"$match": {"user_id": user_id, "timestamp": {"$gte": month_start, "$lt": month_end}, "transaction_type": {"$in": ["deposit", "salary"]}}},
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
         ]
         pipe_expense = [
-            {"$match": {"user_id": user_id, "timestamp": {"$gte": month_start, "$lt": month_end}, "amount": {"$lt": 0}}},
+            {"$match": {"user_id": user_id, "timestamp": {"$gte": month_start, "$lt": month_end}, "transaction_type": {"$nin": ["deposit", "salary"]}}},
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
         ]
 

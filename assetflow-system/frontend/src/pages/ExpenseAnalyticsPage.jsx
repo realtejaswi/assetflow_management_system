@@ -36,8 +36,11 @@ export default function ExpenseAnalyticsPage() {
         // 2. Fetch from ML Service (expense insights and anomalies)
         if (transactions && transactions.length > 0) {
           const mlPayload = { transactions: transactions.map(t => ({
-            amount: t.amount, merchant: t.merchant, description: t.description, 
-            category: t.category, timestamp: t.timestamp
+            amount: (t.transaction_type === 'deposit' || t.transaction_type === 'salary') ? Math.abs(t.amount || 0) : -Math.abs(t.amount || 0), 
+            merchant: t.merchant || '', 
+            description: t.description || '', 
+            category: t.category || 'Other', 
+            timestamp: t.timestamp || new Date().toISOString()
           }))}
           
           const [insightsRes, anomaliesRes] = await Promise.all([
@@ -49,8 +52,9 @@ export default function ExpenseAnalyticsPage() {
           setAnomalies(anomaliesRes.data.anomalies || [])
         }
       } catch (err) {
-        console.error(err)
-        setError('Failed to load expense analytics. Ensure bank-simulator and ml-service are running.')
+        console.error("Full analytics error:", err, err.response?.data)
+        const errMsg = err.response?.data?.detail || err.message || 'Unknown error'
+        setError(`Failed to load expense analytics: ${JSON.stringify(errMsg)}`)
       } finally {
         setLoading(false)
       }
@@ -109,7 +113,7 @@ export default function ExpenseAnalyticsPage() {
               {pieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="85%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={110} dataKey="value" paddingAngle={5}>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={90} dataKey="value" paddingAngle={5}>
                       {pieData.map((_, i) => <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />)}
                     </Pie>
                     <RechartsTooltip formatter={(v) => [`₹${v.toLocaleString('en-IN')}`, '']} contentStyle={{ background: '#0C1526', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 12 }} />

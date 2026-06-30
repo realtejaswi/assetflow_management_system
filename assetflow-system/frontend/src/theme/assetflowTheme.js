@@ -1,8 +1,8 @@
 import { createTheme } from '@mui/material/styles'
 
-export const assetflowTheme = createTheme({
+export const getAssetflowTheme = (mode) => createTheme({
   palette: {
-    mode: 'dark',
+    mode,
     primary: {
       main: '#6366F1',
       light: '#818CF8',
@@ -19,12 +19,12 @@ export const assetflowTheme = createTheme({
     warning: { main: '#F59E0B' },
     info: { main: '#06B6D4' },
     background: {
-      default: '#050B18',
-      paper: '#0C1526',
+      default: mode === 'dark' ? '#050B18' : '#F8FAFC',
+      paper: mode === 'dark' ? '#0C1526' : '#FFFFFF',
     },
     text: {
-      primary: '#E2E8F0',
-      secondary: '#94A3B8',
+      primary: mode === 'dark' ? '#E2E8F0' : '#0F172A',
+      secondary: mode === 'dark' ? '#94A3B8' : '#64748B',
     },
   },
   typography: {
@@ -42,13 +42,13 @@ export const assetflowTheme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          backgroundColor: '#0C1526',
-          border: '1px solid rgba(99,102,241,0.1)',
+          backgroundColor: mode === 'dark' ? '#0C1526' : '#FFFFFF',
+          border: mode === 'dark' ? '1px solid rgba(99,102,241,0.1)' : '1px solid rgba(0,0,0,0.08)',
           backdropFilter: 'blur(20px)',
           transition: 'all 0.25s ease',
           '&:hover': {
-            borderColor: 'rgba(99,102,241,0.3)',
-            boxShadow: '0 8px 32px rgba(99,102,241,0.15)',
+            borderColor: mode === 'dark' ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)',
+            boxShadow: mode === 'dark' ? '0 8px 32px rgba(99,102,241,0.15)' : '0 8px 32px rgba(0,0,0,0.05)',
           },
         },
       },
@@ -66,9 +66,9 @@ export const assetflowTheme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          backgroundColor: 'rgba(5,11,24,0.9)',
+          backgroundColor: mode === 'dark' ? 'rgba(5,11,24,0.9)' : 'rgba(255,255,255,0.9)',
           backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(99,102,241,0.1)',
+          borderBottom: mode === 'dark' ? '1px solid rgba(99,102,241,0.1)' : '1px solid rgba(0,0,0,0.08)',
         },
       },
     },

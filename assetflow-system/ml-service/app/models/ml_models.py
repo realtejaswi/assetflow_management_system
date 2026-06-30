@@ -93,7 +93,7 @@ class AnomalyDetector:
             results.append({
                 **t,
                 "anomaly_score": float(-scores[i]),
-                "is_anomaly": predictions[i] == -1,
+                "is_anomaly": bool(predictions[i] == -1),
                 "reason": "Anomalous spending pattern detected" if predictions[i] == -1 else "Normal"
             })
         return results

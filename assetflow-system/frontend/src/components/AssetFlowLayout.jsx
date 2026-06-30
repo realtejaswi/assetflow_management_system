@@ -58,7 +58,7 @@ export default function AssetFlowLayout() {
   const userId = user?.id || 'demo-user'
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', background: '#050B18' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <Drawer
         variant="permanent"
         open={open}
@@ -70,7 +70,7 @@ export default function AssetFlowLayout() {
             width: drawerWidth,
             transition: isDragging ? 'none' : 'width 0.3s ease',
             overflow: 'hidden',
-            background: 'rgba(12,21,38,0.97)',
+            bgcolor: 'background.paper',
             backdropFilter: 'blur(20px)',
             borderRight: drawerWidth > 150 ? '1px solid rgba(99,102,241,0.15)' : 'none',
           },
